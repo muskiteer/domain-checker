@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Checker API</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; line-height: 1.6; }
+    h1 { color: #333; }
+    pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>Domain Checker API</h1>
+  <p>Simple serverless API to check domain DNS resolution and HTTP/HTTPS reachability.</p>
+  
+  <h2>Endpoint</h2>
+  <p><code>POST /api/check-domain</code></p>
+  
+  <h3>Example Request</h3>
+  <pre>curl -X POST "https://domain-checker-gray.vercel.app/api/check-domain" \
+  -H "Content-Type: application/json" \
+  -d '{"domain":"example.com"}'</pre>
+  
+  <h3>Response</h3>
+  <pre>{
+  "domain": "example.com",
+  "dns_resolves": true,
+  "ip": "93.184.216.34",
+  "http": {
+    "ok": true,
+    "status_code": 200,
+    "url": "http://example.com/"
+  },
+  "https": {
+    "ok": true,
+    "status_code": 200,
+    "url": "https://example.com/"
+  }
+}</pre>
+
+  <h3>Input</h3>
+  <p>JSON body with <code>domain</code> field (string). The API will strip http/https prefixes and paths automatically.</p>
+  
+  <h3>Output</h3>
+  <ul>
+    <li><strong>domain</strong>: cleaned domain name</li>
+    <li><strong>dns_resolves</strong>: boolean indicating if DNS lookup succeeded</li>
+    <li><strong>ip</strong>: resolved IP address (or null)</li>
+    <li><strong>http</strong>: HTTP check result (ok, status_code, url, error)</li>
+    <li><strong>https</strong>: HTTPS check result (ok, status_code, url, error)</li>
+  </ul>
+</body>
+</html>

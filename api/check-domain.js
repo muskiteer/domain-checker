@@ -1,13 +1,5 @@
 const dns = require('dns').promises;
 
-// Use global fetch (Node 18+) or fall back to node-fetch if available
-let fetchFn = global.fetch;
-try {
-  if (!fetchFn) fetchFn = require('node-fetch');
-} catch (e) {
-  // node-fetch not installed; assume platform provides fetch
-}
-
 const TIMEOUT = 5000;
 
 const cleanDomain = (d) => {
@@ -22,7 +14,7 @@ const timeoutFetch = (url, opts = {}) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), TIMEOUT);
   const signal = controller.signal;
-  return (fetchFn || global.fetch)(url, { ...opts, signal })
+  return fetch(url, { ...opts, signal })
     .then((res) => {
       clearTimeout(id);
       return res;
@@ -33,8 +25,19 @@ const timeoutFetch = (url, opts = {}) => {
     });
 };
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'method not allowed' });
+module.exports = async (req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'method not allowed' });
+  }
 
   const body = typeof req.body === 'object' ? req.body : (() => {
     try { return JSON.parse(req.body || '{}'); } catch { return {}; }
@@ -60,7 +63,7 @@ export default async function handler(req, res) {
     const out = { ok: false, status_code: null, url, error: null };
     try {
       const r = await timeoutFetch(url, { method: 'GET', redirect: 'follow' });
-      out.status_code = r.status || (r.statusCode ? r.statusCode : null);
+      out.status_code = r.status;
       out.ok = out.status_code >= 200 && out.status_code < 400;
     } catch (err) {
       out.error = err && err.message ? err.message : String(err);
@@ -80,4 +83,4 @@ export default async function handler(req, res) {
     http: httpRes,
     https: httpsRes,
   });
-}
+};
